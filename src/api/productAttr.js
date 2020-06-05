@@ -43,3 +43,11 @@ export function getProductAttrInfo(productCategoryId) {
     method:'get'
   })
 }
+
+export function getAliOSSCreds(data){
+  return request({
+    url: '/productCate/ProductCateDetail',
+    method: 'post',
+    data
+  })
+}

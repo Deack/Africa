@@ -11,6 +11,14 @@ export function login(username, password) {
   })
 }
 
+export function addList(data) {
+  return request({
+    url: '/login/index',
+    method: 'post',
+    data
+  })
+}
+
 export function getInfo() {
   return request({
     url: '/admin/info',

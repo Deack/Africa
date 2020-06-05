@@ -41,26 +41,64 @@
             登录
           </el-button>
           <el-button style="width: 45%" type="primary" @click.native.prevent="handleTry">
-            获取体验账号
+            注册
           </el-button>
         </el-form-item>
       </el-form>
     </el-card>
     <img :src="login_center_bg" class="login-center-layout">
     <el-dialog
-      title="公众号二维码"
+      title="注册"
+      :model="admin"
       :visible.sync="dialogVisible"
       :show-close="false"
-      :center="true"
+      :center="false"
       width="30%">
       <div style="text-align: center">
-        <span class="font-title-large"><span class="color-main font-extra-large">关注公众号</span>回复<span class="color-main font-extra-large">体验</span>获取体验账号</span>
-        <br>
-        <img src="http://macro-oss.oss-cn-shenzhen.aliyuncs.com/mall/banner/qrcode_for_macrozheng_258.jpg" width="160" height="160" style="margin-top: 10px">
-      </div>
+        <!-- <span class="font-title-large"><span class="color-main font-extra-large">关注公众号</span>回复<span class="color-main font-extra-large">体验</span>获取体验账号</span> -->
+         <!-- <el-dialog
+      :title="isEdit?'编辑用户':'添加用户'"
+      :visible.sync="dialogVisible"
+      width="40%"> -->
+      <el-form :model="admin"
+               ref="adminForm"
+               label-width="150px" size="small">
+        <el-form-item label="昵称：">
+          <el-input v-model="admin.username" style="width: 90%"></el-input>
+        </el-form-item>
+        <el-form-item label="用户名：">
+          <el-input v-model="admin.nickName" style="width:  90%"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱：">
+          <el-input v-model="admin.email" style="width:  90%"></el-input>
+        </el-form-item>
+        <el-form-item label="密码：">
+          <el-input v-model="admin.password"  type="password" style="width:  90%"></el-input>
+        </el-form-item>
+        <!-- <el-form-item label="备注：">
+          <el-input v-model="admin.note"
+                    type="textarea"
+                    :rows="5"
+                    style="width: 250px"></el-input>
+        </el-form-item> -->
+        <el-form-item label="是否启用：">
+          <el-radio-group v-model="admin.status">
+            <el-radio :label="1">是</el-radio>
+            <el-radio :label="0">否</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
       <span slot="footer" class="dialog-footer">
-    <el-button type="primary" @click="dialogConfirm">确定</el-button>
+        <el-button @click="dialogVisible = false"  size="small">取 消</el-button>
+        <el-button type="primary" @click="handleDialogConfirm('ruleForm')" size="small">确 定</el-button>
       </span>
+    <!-- </el-dialog> -->
+        <!-- <br>
+        <img src="http://macro-oss.oss-cn-shenzhen.aliyuncs.com/mall/banner/qrcode_for_macrozheng_258.jpg" width="160" height="160" style="margin-top: 10px"> -->
+      </div>
+      <!-- <span slot="footer" class="dialog-footer">
+    <el-button type="primary" @click="dialogConfirm">确定</el-button>
+      </span> -->
     </el-dialog>
   </div>
 </template>
@@ -68,8 +106,18 @@
 <script>
   import {isvalidUsername} from '@/utils/validate';
   import {setSupport,getSupport,setCookie,getCookie} from '@/utils/support';
-  import login_center_bg from '@/assets/images/login_center_bg.png'
-
+  import login_center_bg from '@/assets/images/login_center_bg.png';
+  import { addList } from '@/api/login';
+  import {createAdmin} from '@/api/login';
+   const defaultAdmin = {
+    id: null,
+    username: null,
+    password: null,
+    nickName: null,
+    email: null,
+    // note: null,
+    status: 1
+  };
   export default {
     name: 'login',
     data() {
@@ -88,6 +136,15 @@
         }
       };
       return {
+        admin: Object.assign({}, defaultAdmin),
+        ruleForm: {
+          username: '',
+        password:'',
+        nickName:'',
+        email: '',
+        status: 1
+        },
+        // admin: Object.assign({}, defaultAdmin),
         loginForm: {
           username: '',
           password: '',
@@ -120,6 +177,36 @@
         } else {
           this.pwdType = 'password'
         }
+      },
+       handleDialogConfirm(formName){
+         addList({ ...this.ruleForm }).then((res) => {
+        console.log(res)
+      })
+        this.$confirm('是否要确认?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          if (this.isEdit) {
+            updateAdmin(this.admin.id,this.admin).then(response => {
+              this.$message({
+                message: '修改成功！',
+                type: 'success'
+              });
+              this.dialogVisible =false;
+              this.getList();
+            })
+          } else {
+            createAdmin(this.admin).then(response => {
+              this.$message({
+                message: '添加成功！',
+                type: 'success'
+              });
+              this.dialogVisible =false;
+              this.getList();
+            })
+          }
+        })
       },
       handleLogin() {
         this.$refs.loginForm.validate(valid => {

@@ -39,6 +39,15 @@
       <el-form-item label="分类图标：">
         <single-upload v-model="productCate.icon"></single-upload>
       </el-form-item>
+      <el-form-item label="上传图片：">
+      <el-upload
+  list-type="picture-card"
+  action="''"
+  :http-request="upload"
+  :before-upload="beforeAvatarUpload">
+  <i class="el-icon-plus"></i>
+ </el-upload>
+ </el-form-item>
       <el-form-item v-for="(filterProductAttr, index) in filterProductAttrList"
                     :label="index | filterLabelFilter"
                     :key="filterProductAttr.key"
@@ -70,7 +79,7 @@
 <script>
   import {fetchList, createProductCate, updateProductCate, getProductCate} from '@/api/productCate';
   import {fetchListWithAttr} from '@/api/productAttrCate';
-  import {getProductAttrInfo} from '@/api/productAttr';
+  import {getProductAttrInfo, getAliOSSCreds} from '@/api/productAttr';
   import SingleUpload from '@/components/Upload/singleUpload';
 
   const defaultProductCate = {
@@ -80,12 +89,14 @@
     name: '',
     navStatus: 0,
     parentId: 0,
+    pic:'',
     productUnit: '',
     showStatus: 0,
     sort: 0,
     productAttributeIdList: []
   };
   export default {
+    name: 'imgUpload',
     name: "ProductCateDetail",
     components: {SingleUpload},
     props: {
@@ -133,6 +144,32 @@
       this.getProductAttrCateList();
     },
     methods: {
+      beforeAvatarUpload (file) {
+    const isLt2M = file.size / 1024 / 1024 < 2
+    if (!isLt2M) {
+     this.$message.error('上传头像图片大小不能超过 2MB!')
+    }
+    return isLt2M
+   },
+   upload(item){
+     getAliOSSCreds().then(res => {
+     let creds = res.body.data
+    // let client = new OSS.Wrapper({
+    //   region: 'oss-cn-beijing', // 服务器集群地区
+    //   accessKeyId: creds.accessKeyId, // OSS帐号
+    //   accessKeySecret: creds.accessKeySecret, // OSS 密码
+    //   stsToken: creds.securityToken, // 签名token
+    //   bucket: 'imgXXXX' // 阿里云上存储的 Bucket
+    //  })
+    //  let key = 'resource/' + localStorage.userId + '/images/' + createId() + '.jpg' // 存储路径，并且给图片改成唯一名字
+    //  return client.put(key, item.file) // OSS上传
+     }).then(res => {
+     console.log(res.url)
+     this.$emit('on-success', res.url) // 返回图片的存储路径
+    }).catch(err => {
+     console.log(err)
+    })
+   },
       getSelectProductCateList() {
         fetchList(0, {pageSize: 100, pageNum: 1}).then(response => {
           this.selectProductCateList = response.data.list;
